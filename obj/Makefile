@@ -1,0 +1,16 @@
+CC=gcc
+BIN_DIR=../bin
+INC_DIR=../include
+SRC_DIR=../src
+LIB_DIR=../lib
+CFLAGS=-I$(INC_DIR) -lm
+.PHONY: clean all
+
+all: $(SRC_DIR)/*.c
+	$(CC) $(SRC_DIR)/ColumnRead.c $(CFLAGS) -c && cd $(LIB_DIR) && make
+
+debug:
+	$(CC) $(SRC_DIR)/ColumnRead.c $(CFLAGS) -g -c && cd $(LIB_DIR) && make
+
+clean:
+	rm -f ColumnRead.o && cd $(LIB_DIR) && make $@

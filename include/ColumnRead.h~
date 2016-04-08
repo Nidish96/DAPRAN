@@ -1,0 +1,8 @@
+#ifndef COLUMNREAD_DEFD
+#define COLUMNREAD_DEFD
+
+#include<stdio.h>
+
+double* ColumnRead(FILE* F,char* delim,int* n,int c,double* freq);
+
+#endif

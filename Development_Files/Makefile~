@@ -1,0 +1,9 @@
+CC=gcc
+CFLAGS=-lm -lfftw3 -O2
+EXEC=nidfft
+.PHONY: clean
+$(EXEC): Main.c
+	$(CC) -o $@ $^ $(CFLAGS)
+
+clean:
+	rm -f $(EXEC)

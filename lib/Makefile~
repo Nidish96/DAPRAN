@@ -1,0 +1,7 @@
+OBJ_DIR=../obj
+.PHONY: clean
+libnid.a: $(OBJ_DIR)/*.o
+	ar cr $@ $(OBJ_DIR)/*.o 
+
+clean:
+	rm -f libnid.a
