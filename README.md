@@ -9,4 +9,4 @@ engineers and scientists working in the field of Digital Signal Processing, Dyna
 I have written an FFT/IFFT program using FFTW3 as of now. I will be moving into STFT, filters, and other DSP features in the coming days.
 I have planned to update one running code per week if all goes well.
 
-Any help from anybody anywhere is welcome - in the form of adding more codes and helping with the Make packaging.
+Any help from anybody anywhere is welcome - in the form of adding more codes, helping with packaging (Make), etc.
