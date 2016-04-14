@@ -12,23 +12,25 @@ char* progname;
 const struct option long_options[] = {
   { "Help", 0, NULL, 'h'},
   { "Reverse",0,NULL, 'r'},
-  { "Frequency",1,NULL,'f'},
+  { "Samp-Freq",1,NULL,'f'},
+  { "Freq-Col",1,NULL,'F'},
   { "Length",1,NULL,'l'},
   { "Ignore",1,NULL,'g'},
   { "Column",1,NULL,'c'},
   { "delim",1,NULL,'d'},
-  { "Time",1,NULL,'t'},
+  { "Time-Col",1,NULL,'t'},
   { "Infile",1,NULL,'i'},
   { "Outfile",1,NULL,'o'},
-  { "Complex",0,NULL,'I'}
+  { "Complex",1,NULL,'I'}
 };
 
 void PrintUsage()
 {
   fprintf(stderr,"Usage : %s options [ filename ... ]\n",progname);
   fprintf(stderr,"-%c --%s\t  -  \t Display this help message\n"
-	  "-%c --%s\t  -  \t Enable for Reverse Transform - Needs output with <real,imag> columns <c,c+1>\n"
+	  "-%c --%s\t i,i  \t Enable for Reverse Transform - Needs output with <real,imag> columns <i1,i2>\n"
 	  "-%c --%s\t dbl \t Sampling Frequency [1 Hz]\n"
+	  "-%c --%s\t int \t Frequency Column (only for -r mode)\n"
 	  "-%c --%s\t int \t Length to be taken [full file default]\n"
 	  "-%c --%s\t int \t Number of Lines to be ignored[0]\n"
 	  "-%c --%s\t int \t Column to be taken [1]\n"
@@ -47,7 +49,9 @@ void PrintUsage()
 	  ,long_options[7].val,long_options[7].name
 	  ,long_options[8].val,long_options[8].name
 	  ,long_options[9].val,long_options[9].name
-	  ,long_options[10].val,long_options[10].name);
+	  ,long_options[10].val,long_options[10].name
+	  ,long_options[11].val,long_options[11].name
+	  );
   exit(1);
 }
 
@@ -107,7 +111,7 @@ void PrintUsage()
 int main(int argc,char* argv[])
 {
   progname = argv[0];
-  const char* const short_options = "hf:l:c:i:o:t:d:Ig:r";
+  const char* const short_options = "hf:l:c:i:o:t:d:Ig:r:F:";
   int next_option;
   double freq = 1;
   int L = -1,col = 1;
@@ -117,6 +121,7 @@ int main(int argc,char* argv[])
   int cmp=0;
   int ignore=0;
   int inv=0;
+  int icol1,icol2;
   do{
     next_option = getopt_long(argc,argv,short_options,long_options,NULL);
 
@@ -131,31 +136,33 @@ int main(int argc,char* argv[])
     case 'd': delim = (strcmp(optarg,"tab")==0)?"\t":(strcmp(optarg,"spc")==0)?" ":optarg; break;
     case 'I': cmp=1; break;
     case 'g': ignore=atoi(optarg); break;
-    case 'r': inv=1; break;
+    case 'r': inv=1; icol1=atoi(strtok(optarg,",")); icol2=atoi(strtok(NULL,",")); freq=0; break;
+    case 'F': freq=-atoi(optarg); break;
     }
   }while(next_option!=-1);
   if(delim==NULL){
     delim = malloc(3*sizeof(char));
-    strcpy(delim,"\t");}
-  
+    strcpy(delim," ");}
+
   if( FIN==stdin )
     fprintf(stderr,"Waiting for Input from stdin\n");
 
-   if( inv==0 ){
-    double* data;
+  int i;
+  fftw_complex *out,*in;
+  double *data,scale,**data2,*OUT;
+  fftw_plan P1,P2;
+  if( inv==0 ){
     data = ColumnRead(FIN,delim,&L,ignore,col,&freq);
 
-    int i;
-    fftw_complex* out = (fftw_complex*)fftw_malloc(sizeof(fftw_complex)*(L/2+1));
-    fftw_plan P;
+    out = (fftw_complex*)fftw_malloc(sizeof(fftw_complex)*(L/2+1));
 
     //  P = fftw_plan_dft_1d(L,in,out,FFTW_FORWARD,FFTW_ESTIMATE);
-    P = fftw_plan_dft_r2c_1d(L,data,out,FFTW_ESTIMATE);
+    P1 = fftw_plan_dft_r2c_1d(L,data,out,FFTW_ESTIMATE);
 
-    fftw_execute(P);
+    fftw_execute(P1);
 
     L = L/2+1;
-    double scale = freq/(2*(L-1));
+    scale = freq/(2*(L-1));
     if( cmp==0 ){
       for(i=0;i<L;i++)
 	fprintf(FOUT,"%lf %lf\n",i*scale,pow(cabs(out[i]),2));}
@@ -164,18 +171,27 @@ int main(int argc,char* argv[])
 	fprintf(FOUT,"%lf %lf %lf\n",i*scale,creal(out[i]),cimag(out[i]));}
 
     free(data);
+    fftw_free(out);
+    fftw_destroy_plan(P);
   }
   else{
-    double **data;
-    data = ColumnRead2(FIN,delim,&L,ignore,col,col+1,&freq);
+    data2 = ColumnRead2(FIN,delim,&L,ignore,icol1,icol2,&freq);
+    L = 2*(L-1);
+    OUT = (double*)malloc(L*sizeof(double));
     
+    in = (fftw_complex*)fftw_malloc(sizeof(fftw_malloc)*(L/2+1));
+    //    fftw_complex* out = (fftw_complex*)fftw_malloc(sizeof(fftw_malloc)*2*(L-1));    
+    for( i=0;2*i<L/2+1;i++ )
+      in[i] = data2[0][i]+I*data2[1][i];
+    //free(data[0]); free(data[1]); free(data);
+    
+
+    P2 = fftw_plan_dft_c2r_1d(L,in,OUT,FFTW_ESTIMATE);
+    /*fftw_execute(P2);*/
   }
 
-  if( FOUT!=stdout ) fclose(FOUT);
-  if( FIN!=stdin ) fclose(FIN);
+  //  if( FOUT!=stdout ) fclose(FOUT);
+  //  if( FIN!=stdin ) fclose(FIN);
 
-  fftw_destroy_plan(P);
-  fftw_free(out);
-  //fftw_free(in);
   return 0;
 }

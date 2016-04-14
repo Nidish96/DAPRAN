@@ -55,59 +55,6 @@ void PrintUsage()
   exit(1);
 }
 
-/*double* ColumnRead(FILE* F,char* delim,int* n,int c,double* freq)
-{
-  int i,j,N=*n;
-  rewind(F);
-  c=(c<1)?1:c;
-  char *line = NULL;
-  size_t len = 0;
-  char *buff = NULL;
-  double* dat;
-  dat = malloc(sizeof(double));
-  double time=0,ptime=0;
-  if( N!=-1 ){
-    for( i=0;i<N;i++ )
-    {
-      if(getline(&line,&len,F)==EOF)
-      {N=i;	break;}
-      if( line[0]=='#' ) continue;
-      
-      dat = realloc(dat,(i+1)*sizeof(double));
-      buff = strtok(line,delim);
-      ptime = time;
-      time = atof(buff);
-      for( j=1;j<c;j++ ){
-	buff = strtok(NULL,delim);
-	if(buff==NULL) break;}
-      dat[i] = (buff!=NULL)?atof(buff):0;
-    }
-  }
-  else{
-    N=0;
-    while(getline(&line,&len,F)!=EOF){
-      if( line[0]=='#' ) continue;
-      N+=1;
-      dat = realloc(dat,N*sizeof(double));
-      buff = strtok(line,delim);
-      ptime = time;
-      time = atof(buff);
-      for( i=1;i<c;i++ ){
-	buff = strtok(NULL,delim);
-	if(buff==NULL) break;}
-      dat[N-1] = (buff!=NULL)?atof(buff):0;
-    }
-  }
-  *freq = (*freq==-1)?1.0/(time-ptime):*freq;
-  *n = N;
-
-  for( i=0;i<N;i++ )
-    printf("%d %f\n",i,dat[i]);
-  exit(1);
-
-  return dat;
-  }*/
-
 int main(int argc,char* argv[])
 {
   progname = argv[0];
@@ -148,12 +95,13 @@ int main(int argc,char* argv[])
     fprintf(stderr,"Waiting for Input from stdin\n");
 
   int i;
+  fftw_complex *out,*in;
+  double *data,scale,**data2,*OUT;
+  fftw_plan P;
   if( inv==0 ){
-    double* data;
     data = ColumnRead(FIN,delim,&L,ignore,col,&freq);
 
-    fftw_complex* out = (fftw_complex*)fftw_malloc(sizeof(fftw_complex)*(L/2+1));
-    fftw_plan P;
+    out = (fftw_complex*)fftw_malloc(sizeof(fftw_complex)*(L/2+1));
 
     //  P = fftw_plan_dft_1d(L,in,out,FFTW_FORWARD,FFTW_ESTIMATE);
     P = fftw_plan_dft_r2c_1d(L,data,out,FFTW_ESTIMATE);
@@ -161,38 +109,40 @@ int main(int argc,char* argv[])
     fftw_execute(P);
 
     L = L/2+1;
-    double scale = freq/(2*(L-1));
+    scale = freq/(2*(L-1));
     if( cmp==0 ){
       for(i=0;i<L;i++)
 	fprintf(FOUT,"%lf %lf\n",i*scale,pow(cabs(out[i]),2));}
-    else{
+     else{
       for(i=0;i<L;i++)
 	fprintf(FOUT,"%lf %lf %lf\n",i*scale,creal(out[i]),cimag(out[i]));}
 
+    fftw_destroy_plan(P);
     free(data);
     fftw_free(out);
+   }
+   else{
+    data2 = ColumnRead2(FIN,delim,&L,ignore,icol1,icol2,&freq);
+    L = 2*(L-1);
+    OUT = (double*)malloc(L*sizeof(double));
+    in = (fftw_complex*)fftw_malloc(sizeof(fftw_complex)*(L/2+1));
+     for( i=0;i<L/2;i++ )
+       in[i] = data2[0][i]+I*data2[1][i];
+    free(data2[0]); free(data2[1]); free(data2);
+
+    P = fftw_plan_dft_c2r_1d(L,in,OUT,FFTW_ESTIMATE);
+    fftw_execute(P);
+
+    for( i=0;i<L;i++ )
+      fprintf(FOUT,"%lf %lf\n",(double)i/freq,OUT[i]/L);
+
+    free(OUT);
+    fftw_free(in);
     fftw_destroy_plan(P);
   }
-  else{
-    double **data;
-    data = ColumnRead2(FIN,delim,&L,ignore,icol1,icol2,&freq);
 
-    fftw_complex* in = (fftw_complex*)fftw_malloc(sizeof(fftw_malloc)*2*(L-1));
-    //    fftw_complex* out = (fftw_complex*)fftw_malloc(sizeof(fftw_malloc)*2*(L-1));    
-    for( i=0;i<L;i++ )
-      in[i] = data[0][i]+I*data[1][i];
-    //free(data[0]); free(data[1]); free(data);
-
-    double *OUT;
-    OUT = (double*)malloc(L*sizeof(double));
-
-    /*    fftw_plan P;
-    P = fftw_plan_dft_c2r_1d(L,in,OUT,FFTW_ESTIMATE);
-    fftw_execute(P);*/
-  }
-
-  //  if( FOUT!=stdout ) fclose(FOUT);
-  //  if( FIN!=stdin ) fclose(FIN);
+  if( FOUT!=stdout ) fclose(FOUT);
+  if( FIN!=stdin ) fclose(FIN);
 
   return 0;
 }
