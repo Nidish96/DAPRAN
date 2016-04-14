@@ -70,7 +70,8 @@ double* ColumnRead(FILE* F,char* delim,int* n,int g,int c,double* freq)
 
 double** ColumnRead2(FILE* F,char* delim,int* n,int g,int c1,int c2,double* freq)
 {
-  int i,j,N=*n,fcol=-*freq;
+  int i,j,N=*n,fcol;
+  fcol = (*freq<0)?-*freq-1:0;
   rewind(F);
   c1=(c1<1)?1:c1;
   c2=(c2<1)?1:c2;
