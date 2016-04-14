@@ -70,7 +70,7 @@ double* ColumnRead(FILE* F,char* delim,int* n,int g,int c,double* freq)
 
 double** ColumnRead2(FILE* F,char* delim,int* n,int g,int c1,int c2,double* freq)
 {
-  int i,j,N=*n;
+  int i,j,N=*n,fcol=-*freq;
   rewind(F);
   c1=(c1<1)?1:c1;
   c2=(c2<1)?1:c2;
@@ -78,7 +78,6 @@ double** ColumnRead2(FILE* F,char* delim,int* n,int g,int c1,int c2,double* freq
   size_t len = 0;
   char *buff = NULL;
   double** dat;
-  char* saveptr;
   dat = malloc(2*sizeof(double));
   dat[0] = malloc(sizeof(double));
   dat[1] = malloc(sizeof(double));  
@@ -86,19 +85,6 @@ double** ColumnRead2(FILE* F,char* delim,int* n,int g,int c1,int c2,double* freq
   int flag;
   for( i=1;i<g;i++ )
     getline(&line,&len,F);
-  if( *freq<=0 ){
-    *freq = (*freq==0)?1.:*freq;
-    while(getline(&line,&len,F)!=EOF);
-    buff=strtok(line,delim);
-    for( j=1;j<-*freq;j++ ){
-      buff=strtok(NULL,delim);
-      if(buff==NULL) break;}
-    *freq = (buff==NULL)?0:atof(buff);
-    *freq *= 2;
-    rewind(F);
-    for(i=1;i<g;i++)
-      getline(&line,&len,F);
-  }
   
   if( N!=-1 ){
     for( i=0;i<N;i++ )
@@ -129,22 +115,15 @@ double** ColumnRead2(FILE* F,char* delim,int* n,int g,int c1,int c2,double* freq
       N+=1;
       dat[0] = realloc(dat[0],N*sizeof(double));
       dat[1] = realloc(dat[1],N*sizeof(double));      
-      /*      buff = strtok_r(line,delim,saveptr);
-      for( i=1;i<c1;i++ ){
-	buff = strtok_r(NULL,delim,saveptr);
-	if(buff==NULL) break;}
-      dat[0][N-1] = (buff!=NULL)?atof(buff):0;
-
-      buff = strtok_r(line,delim,saveptr);
-      for( i=1;i<c2;i++ ){
-	buff = strtok_r(NULL,delim,saveptr);
-	if(buff==NULL) break;}
-	dat[1][N-1] = (buff!=NULL)?atof(buff):0;      */
       flag=0;
       i=-1;
       buff=strtok(line,delim);
+      
       do{
 	i++;
+	if( i==fcol ){
+	  *freq = 2*atof(buff);
+	}
 	if(i==c1-1){
 	  dat[0][N-1] = atof(buff);
 	  flag++;
