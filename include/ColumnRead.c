@@ -23,7 +23,7 @@ double* ColumnRead(FILE* F,char* delim,int* n,int g,int c,double* freq)
   char *buff = NULL;
   double* dat;
   dat = malloc(sizeof(double));
-  double time=0,ptime=0;
+  double time=0,ptime=0,pptime=0;
   for( i=1;i<g;i++ )
     getline(&line,&len,F);
   /*  if( *freq<0 ){
@@ -49,6 +49,7 @@ double* ColumnRead(FILE* F,char* delim,int* n,int g,int c,double* freq)
       if(getline(&line,&len,F)==EOF)
       {N=i;	break;}
       if( line[0]=='#' ) continue;
+      pptime = ptime;
       ptime = time;
       
       dat = realloc(dat,(i+1)*sizeof(double));
@@ -67,6 +68,7 @@ double* ColumnRead(FILE* F,char* delim,int* n,int g,int c,double* freq)
     N=0;
     while(getline(&line,&len,F)!=EOF){
       if( line[0]=='#' ) continue;
+      pptime = ptime;
       ptime = time;
       N+=1;
       dat = realloc(dat,N*sizeof(double));
@@ -81,7 +83,8 @@ double* ColumnRead(FILE* F,char* delim,int* n,int g,int c,double* freq)
       dat[N-1] = (buff!=NULL)?atof(buff):0;
     }
   }
-  *freq = (*freq<0)?1.0/(time-ptime):*freq;
+  *freq = (*freq<0)?1.0/(ptime-pptime):*freq;
+  fprintf(stderr,"tcol : %d\ntime : %lf\nptime : %lf\n",tcol,ptime,pptime);
   *n = N-g;
 
   return dat;
@@ -110,7 +113,7 @@ double** ColumnRead2(FILE* F,char* delim,int* n,int g,int c1,int c2,double* freq
   dat = malloc(2*sizeof(double));
   dat[0] = malloc(sizeof(double));
   dat[1] = malloc(sizeof(double));  
-  double time=0,ptime=0;
+  double time=0,ptime=0,pptime=0;
   int flag;
   for( i=1;i<g;i++ )
     getline(&line,&len,F);
@@ -175,7 +178,7 @@ double** ColumnRead2(FILE* F,char* delim,int* n,int g,int c1,int c2,double* freq
   return dat;
 }
 
-void* ColumnReadn(FILE* F,char* delim,int* n,int g,int cn,int *c,double* freq)
+double** ColumnReadn(FILE* F,char* delim,int* n,int g,int cn,int *c,double* freq)
 /*
   F : File pointer
   delim : delimiter string
@@ -200,7 +203,7 @@ void* ColumnReadn(FILE* F,char* delim,int* n,int g,int cn,int *c,double* freq)
     dat[k] = malloc(sizeof(double));
   }
 
-  double time=0,ptime=0;
+  double time=0,ptime=0,pptime=0;
   int flag;
   for( i=1;i<g;i++ )
     getline(&line,&len,F);
@@ -208,6 +211,7 @@ void* ColumnReadn(FILE* F,char* delim,int* n,int g,int cn,int *c,double* freq)
   if( N!=-1 ){
     for( i=0;i<N;i++ )
     {
+      pptime=ptime;
       ptime = time;
       if(getline(&line,&len,F)==EOF)
       {N=i;	break;}
@@ -233,6 +237,7 @@ void* ColumnReadn(FILE* F,char* delim,int* n,int g,int cn,int *c,double* freq)
     N=0;
     while(getline(&line,&len,F)!=EOF){
       if( line[0]=='#' ) continue;
+      pptime = ptime;
       ptime = time;
       N+=1;
       for( k=0;k<cn;k++ )
@@ -255,7 +260,7 @@ void* ColumnReadn(FILE* F,char* delim,int* n,int g,int cn,int *c,double* freq)
       }      
     }
   }
-  *freq = (time==ptime)?1.0:1.0/(time-ptime);
+  *freq = (*freq<0)?(time==ptime)?1.0:1.0/(ptime-pptime):*freq;
   *n = N-g;
 
   return dat;
