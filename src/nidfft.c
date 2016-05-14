@@ -5,7 +5,7 @@
 #include<fftw3.h>
 #include<getopt.h>
 #include<string.h>
-#include"ColumnRead.h"
+#include<ColumnRead.h>
 
 char* progname;
 

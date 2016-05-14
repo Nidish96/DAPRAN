@@ -1,0 +1,14 @@
+#include<stdio.h>
+#include<stdlib.h>
+#include<math.h>
+#include<complex.h>
+#include<fftw3.h>
+#include<getopt.h>
+#include<string.h>
+#include<ColumnRead.h>
+#include<Windows.h>
+
+int main(int argn,char* args[])
+{
+  return 0;
+}
