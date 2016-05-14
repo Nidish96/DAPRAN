@@ -5,8 +5,17 @@
 #include<ctype.h>
 
 double* ColumnRead(FILE* F,char* delim,int* n,int g,int c,double* freq)
+/* 
+   F : File pointer
+   delim : delimiter string
+   n : pointer to number of lines
+   g : number of line
+   c : Column
+  freq : pointer to sampling frequency; if negative, abs(*freq) is the time column
+*/
 {
   int i,j,N=*n;
+  int tcol = (*freq<0)?-*freq-1:-1;
   rewind(F);
   c=(c<1)?1:c;
   char *line = NULL;
@@ -17,7 +26,7 @@ double* ColumnRead(FILE* F,char* delim,int* n,int g,int c,double* freq)
   double time=0,ptime=0;
   for( i=1;i<g;i++ )
     getline(&line,&len,F);
-  if( *freq<0 ){
+  /*  if( *freq<0 ){
     for( i=0;i<2;i++){
       ptime = time;
       do{
@@ -32,7 +41,7 @@ double* ColumnRead(FILE* F,char* delim,int* n,int g,int c,double* freq)
     for(i=1;i<g;i++)
       getline(&line,&len,F);
     *freq = (time==ptime)?1:1.0/(time-ptime);
-  }
+  }*/
   
   if( N!=-1 ){
     for( i=0;i<N;i++ )
@@ -40,11 +49,16 @@ double* ColumnRead(FILE* F,char* delim,int* n,int g,int c,double* freq)
       if(getline(&line,&len,F)==EOF)
       {N=i;	break;}
       if( line[0]=='#' ) continue;
+      ptime = time;
       
       dat = realloc(dat,(i+1)*sizeof(double));
       buff = strtok(line,delim);
+      if( tcol==0 )
+	time = atof(buff);
       for( j=1;j<c;j++ ){
 	buff = strtok(NULL,delim);
+	if( tcol==j )
+	  time = atof(buff);
 	if(buff==NULL) break;}
       dat[i] = (buff!=NULL)?atof(buff):0;
     }
@@ -53,22 +67,36 @@ double* ColumnRead(FILE* F,char* delim,int* n,int g,int c,double* freq)
     N=0;
     while(getline(&line,&len,F)!=EOF){
       if( line[0]=='#' ) continue;
+      ptime = time;
       N+=1;
       dat = realloc(dat,N*sizeof(double));
       buff = strtok(line,delim);
+      if( tcol==0 )
+	time = atof(buff);
       for( i=1;i<c;i++ ){
 	buff = strtok(NULL,delim);
+	if( tcol==i )
+	  time = atof(buff);
 	if(buff==NULL) break;}
       dat[N-1] = (buff!=NULL)?atof(buff):0;
     }
   }
-  *freq = (*freq==-1)?1.0/(time-ptime):*freq;
+  *freq = (*freq<0)?1.0/(time-ptime):*freq;
   *n = N-g;
 
   return dat;
 }
 
 double** ColumnRead2(FILE* F,char* delim,int* n,int g,int c1,int c2,double* freq)
+/*
+  F : File pointer
+  delim : delimiter string
+  n : pointer to number of lines
+  g : number of lines to ignore
+  c1 : column 1
+  c2 : column 2
+  freq : pointer to sampling frequency; if negative, abs(*freq) is the frequency column
+*/
 {
   int i,j,N=*n,fcol;
   fcol = (*freq<0)?-*freq-1:0;
@@ -97,7 +125,10 @@ double** ColumnRead2(FILE* F,char* delim,int* n,int g,int c1,int c2,double* freq
       dat[0] = realloc(dat[0],(i+1)*sizeof(double));
       dat[1] = realloc(dat[1],(i+1)*sizeof(double));      
       buff = strtok(line,delim);
+      if( fcol==0 ) *freq = 2*atof(buff);
       for( j=1;j<c1;j++ ){
+	if( j==fcol )
+	  *freq = 2*atof(buff);
 	buff = strtok(NULL,delim);
 	if(buff==NULL) break;}
       dat[0][i] = (buff!=NULL)?atof(buff):0;
@@ -136,9 +167,95 @@ double** ColumnRead2(FILE* F,char* delim,int* n,int g,int c1,int c2,double* freq
 	buff = strtok(NULL,delim);
       }while(flag!=2 && buff!=NULL);
       dat[0][N-1]=(flag==0)?0:dat[0][N-1];
-      dat[1][N-1]=(flag==1)?0:dat[1][N-1];
+      dat[1][N-1]=(flag==0)?0:dat[1][N-1];
     }
   }
+  *n = N-g;
+
+  return dat;
+}
+
+void* ColumnReadn(FILE* F,char* delim,int* n,int g,int cn,int *c,double* freq)
+/*
+  F : File pointer
+  delim : delimiter string
+  n : pointer to number of lines (-1 if full file)
+  g : number of lines to ignore
+  cn : number of columns
+  c : pointer to column indexes
+  freq : pointer to sampling frequency; if negative, abs(*freq) is the time column
+*/
+{
+  int i,j,N=*n,tcol,k;
+  tcol = (*freq<0)?-*freq-1:0;
+  rewind(F);
+
+  char *line = NULL;
+  size_t len = 0;
+  char *buff = NULL;
+  double** dat;
+  dat = malloc(cn*sizeof(double));
+  for( k=0;k<cn;k++ ){
+    c[k]=(c[k]<1)?1:c[k];
+    dat[k] = malloc(sizeof(double));
+  }
+
+  double time=0,ptime=0;
+  int flag;
+  for( i=1;i<g;i++ )
+    getline(&line,&len,F);
+  
+  if( N!=-1 ){
+    for( i=0;i<N;i++ )
+    {
+      ptime = time;
+      if(getline(&line,&len,F)==EOF)
+      {N=i;	break;}
+      if( line[0]=='#' ) continue;
+
+      for( k=0;k<cn;k++ )
+	dat[k] = realloc(dat[k],(i+1)*sizeof(double));
+
+      for( k=0;k<cn;k++ ){    
+	buff = strtok(line,delim);
+	if( tcol==0 )
+	  time=atof(buff);
+	for( j=1;j<c[k];j++ ){
+	  buff = strtok(NULL,delim);
+	  if( j==tcol )
+	    time=atof(buff);
+	  if(buff==NULL) break;}
+	dat[k][i] = (buff!=NULL)?atof(buff):0;
+      }
+    }
+  }
+  else{
+    N=0;
+    while(getline(&line,&len,F)!=EOF){
+      if( line[0]=='#' ) continue;
+      ptime = time;
+      N+=1;
+      for( k=0;k<cn;k++ )
+	dat[k] = realloc(dat[k],N*sizeof(double));
+
+      flag=0;
+      i=-1;
+      buff=strtok(line,delim);
+
+      for( k=0;k<cn;k++ ){    
+	buff = strtok(line,delim);
+	if( tcol==0 )
+	  time=atof(buff);
+	for( j=1;j<c[k];j++ ){
+	  buff = strtok(NULL,delim);
+	  if( j==tcol )
+	    time=atof(buff);
+	  if(buff==NULL) break;}
+	dat[k][i] = (buff!=NULL)?atof(buff):0;
+      }      
+    }
+  }
+  *freq = (time==ptime)?1.0:1.0/(time-ptime);
   *n = N-g;
 
   return dat;
