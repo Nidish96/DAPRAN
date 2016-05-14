@@ -84,7 +84,7 @@ double* ColumnRead(FILE* F,char* delim,int* n,int g,int c,double* freq)
     }
   }
   *freq = (*freq<0)?1.0/(ptime-pptime):*freq;
-  fprintf(stderr,"tcol : %d\ntime : %lf\nptime : %lf\n",tcol,ptime,pptime);
+  //  fprintf(stderr,"tcol : %d\ntime : %lf\nptime : %lf\n",tcol,ptime,pptime);
   *n = N-g;
 
   return dat;

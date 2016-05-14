@@ -3,15 +3,20 @@
 
 #include<math.h>
 
-#define Rectangle(n,N) (fabs(n)<(double)N/2)?1.:0
-#define Triangle(n,N) (fabs(n)<(double)N/2)?1.-fabs(n)/(N/2):0
+typedef struct{int w; double a,b;}window;
 
-#define Hann(n,N) (fabs(n)<(double)N/2)?0.5*(1.-cos(2.*M_PI*(n-N/2)/(N-1))):0
-#define Hamming(n,N) (fabs(n)<(double)N/2)?0.53836-0.46164*cos(2.*M_PI*(n-N/2)/(N-1)):0
-#define GHamming(n,N,a,b) (fabs(n)<(double)N/2)?a-b*cos(2.*M_PI*(n-N/2)/(N-1)):0
+/* Window function macros */
+double Rectangle(int n,int N,double a,double b);
+double Triangle(int n,int N,double a,double b); 
 
-#define GBlackman(n,N,a) (fabs(n)<(double)N/2)?((1.-a)-cos(2.*M_PI*(n-N/2)/(N-1))+a*cos(4.*M_PI*(n-N/2)/(N-1)))/2:0
-#define TBlackman(n,N) (fabs(n)<(double)N/2)?(.42-.5*cos(2.*M_PI*(n-N/2)/(N-1))+.08*cos(4.*M_PI*(n-N/2)/(N-1))):0
-#define EBlackman(n,N) (fabs(n)<(double)N/2)?(7938.-9240.*cos(2.*M_PI*(n-N/2)/(N-1))+1430.*cos(4.*M_PI*(n-N/2)/(N-1)))/18608.:0
+double Hann(int n,int N,double a,double b); 
+double Hamming(int n,int N,double a,double b);
+double GHamming(int n,int N,double a,double b);
+
+double GBlackman(int n,int N,double a,double b);
+double TBlackman(int n,int N,double a,double b); 
+double EBlackman(int n,int N,double a,double b); 
+
+double* Windowed(double* data,window W,int at,int L,int Nw);
 
 #endif

@@ -76,26 +76,27 @@ const char* const short_options = "hrvmnH:bTB:N:t:i:o:c:l:g:d:";
 int main(int argn,char* args[])
 {
   int next_option,Nw=256;
-  double window[3]={0,0,0};
+  window W={'r',0,0};
   progname = args[0];
   double freq=1;
   int col=1,L=-1,ignore=0;
+  char* delim=NULL;
   FILE *FIN=stdin,*FOUT=stdout;
   do{
     next_option = getopt_long(argn,args,short_options,long_options,NULL);
 
     switch(next_option){
     case 'h': PrintUsage(stderr); break;
-    case 'r': window[0]=next_option; break;
-    case 'v': window[0]=next_option; break;
-    case 'm': window[0]=next_option; break;
-    case 'n': window[0]=next_option; break;
-    case 'H': window[0]=next_option;
-      sscanf(optarg,"%lf,%lf",&window[1],&window[2]); break;
-    case 'b': window[0]=next_option; break;
-    case 'T': window[0]=next_option; break;
-    case 'B': window[0]=next_option;
-      window[1] = atof(optarg); break;      
+    case 'r': 
+    case 'v': 
+    case 'm': 
+    case 'n': W.w=next_option; break;
+    case 'H': W.w=next_option;
+      sscanf(optarg,"%lf,%lf",&W.a,&W.b); break;
+    case 'b': 
+    case 'T': W.w=next_option; break;
+    case 'B': W.w=next_option;
+      W.a = atof(optarg); break;      
     case 'N': Nw = atoi(optarg); break;
     case 't': freq=-atoi(optarg); break;
     case 'i': FIN=fopen(optarg,"r"); break;
@@ -107,20 +108,33 @@ int main(int argn,char* args[])
     }
   }while(next_option!=-1);
   if(delim==NULL){
-    delim=malloc(3*sizeof(char));
-    strcpy(delim," ");}
+    delim = malloc(3*sizeof(char));
+    delim = " "; }
+  
   if( FIN==stdin )
     fprintf(stderr,"Waiting for input from stdin\n");
   
   int n;
-  for( n=-300;n<300;n++ )
-    fprintf(stdout,"%d %f %f %f %f %f %f %f\n",n
-	    ,(double)Rectangle(n-100,Nw)
-	    ,(double)Triangle(n-100,Nw)
-	    ,Hann(n-100,Nw)
-	    ,Hamming(n-100,Nw)
-	    ,TBlackman(n-100,Nw)
-	    ,EBlackman(n-100,Nw)
-	    ,GBlackman(n-100,Nw,.16));
+
+  /* for( n=-300;n<300;n++ ) */
+  /*   fprintf(stdout,"%d %f %f %f %f %f %f %f\n",n */
+  /* 	    ,Rectangle(n-100,Nw,1,2) */
+  /* 	    ,Triangle(n-100,Nw,1,2) */
+  /* 	    ,Hann(n-100,Nw,1,2) */
+  /* 	    ,Hamming(n-100,Nw,1,2) */
+  /* 	    ,TBlackman(n-100,Nw,1,2) */
+  /* 	    ,EBlackman(n-100,Nw,1,2) */
+  /* 	    ,GBlackman(n-100,Nw,.16,1)); */
+
+  double *data = ColumnRead(FIN,delim,&L,ignore,col,&freq);
+  int i;
+  //  for( i=0;i<L;i++ )
+    //  fprintf(stdout,"%lf\n",data[i]);
+
+  data = Windowed(data,W,200,L,Nw);
+  for( i=0;i<L;i++ )
+    fprintf(stdout,"%lf\n",data[i]);
+  
+  free(data);
   return 0;
 }
