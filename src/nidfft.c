@@ -52,6 +52,14 @@ void PrintUsage()
 	  ,long_options[10].val,long_options[10].name
 	  ,long_options[11].val,long_options[11].name
 	  );
+
+  fprintf(stderr,"\nOutput :\n"
+	  "FORWARD TRANSFORM\n"
+	  "default: <frequency,spectral power>\n"
+	  "-I     : <frequency,real(tfm),imag(tfm)>\n"
+	  "REVERSE TRANSFORM (-r)\n"
+	  "default: <time,value>\n");
+
   exit(1);
 }
 
@@ -144,5 +152,6 @@ int main(int argc,char* argv[])
   if( FOUT!=stdout ) fclose(FOUT);
   if( FIN!=stdin ) fclose(FIN);
 
+  if( delim!=NULL ) free(delim);
   return 0;
 }

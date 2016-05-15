@@ -5,7 +5,7 @@
 
 typedef struct{int w; double a,b;}window;
 
-/* Window function macros */
+/* Window functions */
 double Rectangle(int n,int N,double a,double b);
 double Triangle(int n,int N,double a,double b); 
 
@@ -17,6 +17,6 @@ double GBlackman(int n,int N,double a,double b);
 double TBlackman(int n,int N,double a,double b); 
 double EBlackman(int n,int N,double a,double b); 
 
-double* Windowed(double* data,window W,int at,int L,int Nw);
+int Windowed(double* data,window W,int at,int L,int Nw,double* windata);
 
 #endif
