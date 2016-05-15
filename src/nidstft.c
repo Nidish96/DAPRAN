@@ -68,7 +68,7 @@ void PrintUsage(FILE* Stream)
   exit(1);
 }
 
-const char* const short_options = "hrvmnH:bTB:N:f:t:i:o:c:l:g:d:F:C";
+const char* const short_options = "hrvmnH:bTB:N:f:t:i:o:c:l:g:d:F:CI:";
 int main(int argn,char* args[])
 {
   int next_option,Nw=80,Inc=24;

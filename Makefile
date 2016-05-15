@@ -5,7 +5,8 @@ SRC_DIR=src/
 OBJ_DIR=obj/
 EX_DIR=examples/
 
-CC=gcc -g
+DBG=-O
+CC=gcc $(DBG)
 CFLAGS=-L$(LIB_DIR) -lnid -lm -lfftw3 -I$(INC_DIR)
 
 LIBNID=libnid.a
