@@ -15,11 +15,11 @@ const struct option long_options[]={
   { "triangle", 0, NULL, 'v' },
   { "hamming", 0, NULL, 'm' },
   { "hann", 0, NULL, 'n' },
-  { "genHamming", 1, NULL, 'H' },
+  { "Ghamming", 1, NULL, 'H' },
   { "blackman", 0, NULL, 'b' },
-  { "truncblackman", 0, NULL, 'T' },
-  { "genbBlackman", 1, NULL, 'B' },
-  { "WindowLength", 1, NULL, 'N' },
+  { "Tblackman", 0, NULL, 'T' },
+  { "Gblackman", 1, NULL, 'B' },
+  { "wndwlngth", 1, NULL, 'N' },
   { "Time-Col", 1, NULL, 't' },
   { "Infile", 1, NULL, 'i' },
   { "Outfile", 1, NULL, 'o' },
@@ -29,46 +29,33 @@ const struct option long_options[]={
   { "delim",1,NULL,'d' },
   { NULL, 0, NULL, 0}
 };
+const char* description[]={
+  " -  Display this Help Message",
+  " -  Window - Rectangle",
+  " -  Window - Triangle",
+  " -  Window - Hamming",
+  " -  Window - Hann",
+  "dbl Window - Generalized Hamming",
+  " -  Window - Blackman",
+  " -  Window - Truncated Blackman (alpha=.16)",
+  "dbl Window - Generalized Blackman",
+  "int Window Length",
+  "int Column to take time data from [sampling frequency 1Hz if not set]",
+  "str File to take input from [defaults to stdin]",
+  "str File to output stft data to [defaults to stdout]",
+  "int Column to read [defaults to 1]",
+  "int Length of file to be read [defaults to full file]",
+  "int Number of lines to ignore [defaults to 0]",
+  "str Set delimiter <tab,spc>[defaults to spc]; Other string delimiters may be typed"
+};
 
 void PrintUsage(FILE* Stream)
 {
   fprintf(Stream,"Usage: %s options [ outfile ... ]\n",progname);
-  fprintf(Stream,
-	  "-%c --%s \n"
-	  "-%c --%s \n"
-	  "-%c --%s \n"
-	  "-%c --%s \n"
-	  "-%c --%s \n"
-	  "-%c --%s \n"
-	  "-%c --%s \n"
-	  "-%c --%s \n"
-	  "-%c --%s \n"
-	  "-%c --%s \n"
-	  "-%c --%s \n"
-	  "-%c --%s \n"
-	  "-%c --%s \n"
-	  "-%c --%s \n"
-	  "-%c --%s \n"
-	  "-%c --%s \n" 	  
-	  "-%c --%s \n",
-	  long_options[0].val,long_options[0].name,
-	  long_options[1].val,long_options[1].name,
-	  long_options[2].val,long_options[2].name,
-	  long_options[3].val,long_options[3].name,
-	  long_options[4].val,long_options[4].name,
-	  long_options[5].val,long_options[5].name,
-	  long_options[6].val,long_options[6].name,
-	  long_options[7].val,long_options[7].name,
-	  long_options[8].val,long_options[8].name,
-	  long_options[9].val,long_options[9].name,
-	  long_options[10].val,long_options[10].name,
-	  long_options[11].val,long_options[11].name,
-	  long_options[12].val,long_options[12].name,
-	  long_options[13].val,long_options[13].name,
-	  long_options[14].val,long_options[14].name,
-	  long_options[15].val,long_options[15].name,
-	  long_options[16].val,long_options[16].name
-	  );
+  int i;
+  for( i=0;i<17;i++ )
+    fprintf(Stream,"-%c --%s\t %s\n",
+	    long_options[i].val,long_options[i].name,description[i]);
   exit(1);
 }
 
