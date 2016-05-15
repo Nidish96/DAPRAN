@@ -76,7 +76,8 @@ int main(int argn,char* args[])
   progname = args[0];
   double freq=1;
   int col=1,L=-1,ignore=0,cmp=0;
-  char* delim=NULL;
+  char* delim;
+  delim=NULL;
   FILE *FIN=stdin,*FOUT=stdout;
   do{
     next_option = getopt_long(argn,args,short_options,long_options,NULL);
@@ -109,7 +110,7 @@ int main(int argn,char* args[])
   }while(next_option!=-1);
   if(delim==NULL){
     delim = malloc(3*sizeof(char));
-    delim = " "; }
+    strcpy(delim," "); }
   
   if( FIN==stdin )
     fprintf(stderr,"Waiting for input from stdin\n");
@@ -124,10 +125,6 @@ int main(int argn,char* args[])
 
   for( k=0;k<L;k+=Inc ){
     Windowed(data,W,k,L,Nw,windata);
-    /* for( i=0;i<L;i++ ) */
-    /*   fprintf(FOUT,"%d %lf\n",i,windata[i]); */
-    /* fprintf(FOUT,"\n"); */
-
     fftw_execute(P);
 
     if( cmp==0 ){
@@ -142,14 +139,16 @@ int main(int argn,char* args[])
 		(double)k/freq,i*fscale,creal(out[i]),cimag(out[i]));
       fprintf(FOUT,"\n");
     }
-
   }
 
   if( FOUT!=stdout ) fclose(FOUT);
   if( FIN!=stdin ) fclose(FIN);
-  /* if(delim!=NULL) free(delim); */
-  free(windata);
+  fftw_destroy_plan(P);
+  fftw_free(out);
   free(data);
+  free(windata);
+  free(delim);
+  /* if(delim!=NULL) free(delim); */
   
   return 0;
 }
