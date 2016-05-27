@@ -30,6 +30,7 @@ const struct option long_options[]={
   { "delim",1,NULL,'d' },
   { "stft-Inc", 1, NULL, 'I' },
   { "Complex", 0, NULL, 'C' },
+  { "OP_Omega", 0, NULL, 'w' },
   { NULL, 0, NULL, 0}
 };
 const char* description[]={
@@ -53,8 +54,9 @@ const char* description[]={
   "str Set delimiter <tab,spc>[defaults to spc]; Other string delimiters may be typed",
   "int Set increment for STFT [defaults to 24]",
   " -  Enable Complex Output <real,imag> [defaults to power]\n"
+  " -  Output in terms of W(Omega, rad s^-1) instead of f(Frequency, Hz)\n"
 };
-int args_tot=20;
+int args_tot=21;
 void PrintUsage(FILE* Stream)
 {
   fprintf(Stream,"Usage: %s options [ outfile ... ]\n",progname);
@@ -68,13 +70,13 @@ void PrintUsage(FILE* Stream)
   exit(1);
 }
 
-const char* const short_options = "hrvmnH:bTB:N:f:t:i:o:c:l:g:d:F:CI:";
+const char* const short_options = "hrvmnH:bTB:N:f:t:i:o:c:l:g:d:F:CI:w";
 int main(int argn,char* args[])
 {
   int next_option,Nw=80,Inc=24;
   window W={'b',0,0};
   progname = args[0];
-  double freq=1;
+  double freq=1,w=0;
   int col=1,L=-1,ignore=0,cmp=0;
   char* delim;
   delim=NULL;
@@ -106,6 +108,7 @@ int main(int argn,char* args[])
     case 'f': freq = atof(optarg); break;
     case 'I': Inc = atoi(optarg); break;
     case 'C': cmp = 1; break;
+    case 'w': w = 1; break;
     }
   }while(next_option!=-1);
   if(delim==NULL){
@@ -122,6 +125,7 @@ int main(int argn,char* args[])
   fftw_plan P = fftw_plan_dft_r2c_1d(L,windata,out,FFTW_ESTIMATE);  
   int i,k,Lf=(L/2+1);
   double fscale = freq/(2*(Lf-1));
+  fscale = (w)?fscale*2*M_PI:fscale;
 
   for( k=0;k<L;k+=Inc ){
     Windowed(data,W,k,L,Nw,windata);

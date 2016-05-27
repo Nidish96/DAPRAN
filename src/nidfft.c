@@ -21,7 +21,8 @@ const struct option long_options[] = {
   { "Time-Col",1,NULL,'t'},
   { "Infile",1,NULL,'i'},
   { "Outfile",1,NULL,'o'},
-  { "Complex",1,NULL,'I'}
+  { "Complex",1,NULL,'I'},
+  { "OP_W",0,NULL,'w' }
 };
 
 void PrintUsage()
@@ -39,6 +40,7 @@ void PrintUsage()
 	  "-%c --%s\t str \t Input File Name [stdin]\n"
 	  "-%c --%s\t str \t Output File Name [stdout]\n"
 	  "-%c --%s\t  -  \t Enable Complex output\n"
+	  "-%c --%s\t  -  \t Output W(omega) instead of f(frequency) (only for fwd trnsfrm)\n"	  
 	  ,long_options[0].val,long_options[0].name
 	  ,long_options[1].val,long_options[1].name
 	  ,long_options[2].val,long_options[2].name
@@ -51,6 +53,7 @@ void PrintUsage()
 	  ,long_options[9].val,long_options[9].name
 	  ,long_options[10].val,long_options[10].name
 	  ,long_options[11].val,long_options[11].name
+	  ,long_options[12].val,long_options[12].name	  
 	  );
 
   fprintf(stderr,"\nOutput :\n"
@@ -66,9 +69,9 @@ void PrintUsage()
 int main(int argc,char* argv[])
 {
   progname = argv[0];
-  const char* const short_options = "hf:l:c:i:o:t:d:Ig:r:F:";
+  const char* const short_options = "hf:l:c:i:o:t:d:Ig:r:F:w";
   int next_option;
-  double freq = 1;
+  double freq = 1,w=0;
   int L = -1,col = 1;
   FILE* FIN = stdin,*FOUT = stdout;
   char* delim;
@@ -93,6 +96,7 @@ int main(int argc,char* argv[])
     case 'g': ignore=atoi(optarg); break;
     case 'r': inv=1; icol1=atoi(strtok(optarg,",")); icol2=atoi(strtok(NULL,",")); freq=0; break;
     case 'F': freq=-atoi(optarg); break;
+    case 'w': w = 1; break;
     }
   }while(next_option!=-1);
   if(delim==NULL){
@@ -118,12 +122,13 @@ int main(int argc,char* argv[])
 
     L = L/2+1;
     scale = freq/(2*(L-1));
+    scale = (w)?scale*2*M_PI:scale;
     if( cmp==0 ){
       for(i=0;i<L;i++)
-	fprintf(FOUT,"%lf %lf\n",i*scale,pow(cabs(out[i]),2));}
+	fprintf(FOUT,"%lf %.4e\n",i*scale,pow(cabs(out[i]),2)/L);}
      else{
       for(i=0;i<L;i++)
-	fprintf(FOUT,"%lf %lf %lf\n",i*scale,creal(out[i]),cimag(out[i]));}
+	fprintf(FOUT,"%lf %.4e %.4e\n",i*scale,creal(out[i])/L,cimag(out[i])/L);}
 
     fftw_destroy_plan(P);
     free(data);
@@ -142,7 +147,7 @@ int main(int argc,char* argv[])
     fftw_execute(P);
 
     for( i=0;i<L;i++ )
-      fprintf(FOUT,"%lf %lf\n",(double)i/freq,OUT[i]/L);
+      fprintf(FOUT,"%lf %.4e\n",(double)i/freq,OUT[i]);
 
     free(OUT);
     fftw_free(in);

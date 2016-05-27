@@ -1,0 +1,18 @@
+#+FILETAGS: DAPRAN_BUGS
+#+STARTUP: indent
+
+#+TITLE: Bugs in DAPRAN
+
+* Introduction
+This org file is maintained to keep track of the bugs
+found in any of the Binaries in DAPRAN. Each unresolved bug 
+will be marked as a TODO object under the next section (Bugs List) 
+[ To create a new one, go to a line under Bugs List and type 
+"** <Bug Name>"  and mark it with "C-c C-t" ].
+When any bug is resolved please don't forget to commit the code
+and leave a comment here as to what was wrong.
+
+* Bugs List
+** TODO Inverse FFT in nidfft giving segmentation fault
+*** Reported by : Nidish B
+
