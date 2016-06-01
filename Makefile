@@ -12,10 +12,11 @@ CFLAGS=-L$(LIB_DIR) -lnid -lm -lfftw3 -I$(INC_DIR)
 LIBNID=libnid.a
 NIDFFT=nidfft
 NIDSTFT=nidstft
+WAVEGEN=wavegen
 
 .PHONY: all clean debug example
-all: $(BIN_DIR)$(NIDFFT) $(BIN_DIR)$(NIDSTFT)
-example: $(BIN_DIR)$(NIDFFT) $(BIN_DIR)$(NIDSTFT)
+all: $(BIN_DIR)$(NIDFFT) $(BIN_DIR)$(NIDSTFT) $(BIN_DIR)$(WAVEGEN)
+example: $(BIN_DIR)$(NIDFFT) $(BIN_DIR)$(NIDSTFT) $(BIN_DIR)$(WAVEGEN)
 	cp $(BIN_DIR)* $(EX_DIR)
 
 $(BIN_DIR)$(NIDFFT): $(LIB_DIR)$(LIBNID) $(SRC_DIR)$(NIDFFT).c
@@ -23,6 +24,9 @@ $(BIN_DIR)$(NIDFFT): $(LIB_DIR)$(LIBNID) $(SRC_DIR)$(NIDFFT).c
 
 $(BIN_DIR)$(NIDSTFT): $(LIB_DIR)$(LIBNID) $(SRC_DIR)$(NIDSTFT).c
 	$(CC) -o $@ $(SRC_DIR)$(NIDSTFT).c $(CFLAGS)
+
+$(BIN_DIR)$(WAVEGEN): $(SRC_DIR)$(WAVEGEN).c
+	$(CC) -o $@ $^ $(CFLAGS)
 
 $(OBJ_DIR)ColumnRead.o: $(INC_DIR)ColumnRead.c
 	$(CC) -c $^ -o $@

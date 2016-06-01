@@ -125,10 +125,10 @@ int main(int argc,char* argv[])
     scale = (w)?scale*2*M_PI:scale;
     if( cmp==0 ){
       for(i=0;i<L;i++)
-	fprintf(FOUT,"%lf %.4e\n",i*scale,pow(cabs(out[i]),2)/L);}
+	fprintf(FOUT,"%lf %.4e\n",i*scale,pow(cabs(out[i]),2)/(L-1));}
      else{
       for(i=0;i<L;i++)
-	fprintf(FOUT,"%lf %.4e %.4e\n",i*scale,creal(out[i])/L,cimag(out[i])/L);}
+	fprintf(FOUT,"%lf %.4e %.4e\n",i*scale,creal(out[i])/(L-1),cimag(out[i])/(L-1));}
 
     fftw_destroy_plan(P);
     free(data);

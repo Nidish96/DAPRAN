@@ -3,6 +3,7 @@
 #include<string.h>
 #include<stdlib.h>
 #include<ctype.h>
+#include<assert.h>
 
 double* ColumnRead(FILE* F,char* delim,int* n,int g,int c,double* freq)
 /* 
@@ -25,7 +26,7 @@ double* ColumnRead(FILE* F,char* delim,int* n,int g,int c,double* freq)
   dat = malloc(sizeof(double));
   double time=0,ptime=0,pptime=0;
   for( i=1;i<g;i++ )
-    getline(&line,&len,F);
+    assert(getline(&line,&len,F));
   /*  if( *freq<0 ){
     for( i=0;i<2;i++){
       ptime = time;
@@ -117,7 +118,7 @@ double** ColumnRead2(FILE* F,char* delim,int* n,int g,int c1,int c2,double* freq
   double time=0,ptime=0,pptime=0;
   int flag;
   for( i=1;i<g;i++ )
-    getline(&line,&len,F);
+    assert(getline(&line,&len,F));
   
   if( N!=-1 ){
     for( i=0;i<N;i++ )
@@ -207,7 +208,7 @@ double** ColumnReadn(FILE* F,char* delim,int* n,int g,int cn,int *c,double* freq
   double time=0,ptime=0,pptime=0;
   int flag;
   for( i=1;i<g;i++ )
-    getline(&line,&len,F);
+    assert(getline(&line,&len,F));
   
   if( N!=-1 ){
     for( i=0;i<N;i++ )
