@@ -1,0 +1,11 @@
+#include<stdio.h>
+#include<math.h>
+#include<getopt.h>
+
+const char* progname;
+
+int main(int nargs,char* sargs[])
+{
+
+  return 0;
+}

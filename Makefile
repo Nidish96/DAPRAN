@@ -13,9 +13,10 @@ LIBNID=libnid.a
 NIDFFT=nidfft
 NIDSTFT=nidstft
 WAVEGEN=wavegen
+CONVOLVE=convolve
 
 .PHONY: all clean debug example
-all: $(BIN_DIR)$(NIDFFT) $(BIN_DIR)$(NIDSTFT) $(BIN_DIR)$(WAVEGEN)
+all: $(BIN_DIR)$(NIDFFT) $(BIN_DIR)$(NIDSTFT) $(BIN_DIR)$(WAVEGEN) $(BIN_DIR)$(CONVOLVE)
 example: $(BIN_DIR)$(NIDFFT) $(BIN_DIR)$(NIDSTFT) $(BIN_DIR)$(WAVEGEN)
 	cp $(BIN_DIR)* $(EX_DIR)
 
@@ -26,6 +27,9 @@ $(BIN_DIR)$(NIDSTFT): $(LIB_DIR)$(LIBNID) $(SRC_DIR)$(NIDSTFT).c
 	$(CC) -o $@ $(SRC_DIR)$(NIDSTFT).c $(CFLAGS)
 
 $(BIN_DIR)$(WAVEGEN): $(SRC_DIR)$(WAVEGEN).c
+	$(CC) -o $@ $^ $(CFLAGS)
+
+$(BIN_DIR)$(CONVOLVE): $(SRC_DIR)$(CONVOLVE).c
 	$(CC) -o $@ $^ $(CFLAGS)
 
 $(OBJ_DIR)ColumnRead.o: $(INC_DIR)ColumnRead.c

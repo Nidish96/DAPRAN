@@ -120,8 +120,8 @@ int main(int argc,char* argv[])
 
     fftw_execute(P);
 
+    scale = freq/L;
     L = L/2+1;
-    scale = freq/(2*(L-1));
     scale = (w)?scale*2*M_PI:scale;
     if( cmp==0 ){
       for(i=0;i<L;i++)
