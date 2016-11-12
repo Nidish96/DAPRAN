@@ -13,7 +13,5 @@ Binaries:
 1) nidfft - conducts fft and ifft on data from file or pipe
 2) nidstft - conducts stft on data from file or pipe - a few standard window functions have been implemented
 3) wavegen - generates a sum of sinusoids
-4) convolve - A basic convolution tool
-5) nidpoincare - takes the poincare section of an arbitrary dimensional data
 
 Any help from anybody anywhere is welcome - in the form of adding more codes, helping with packaging (Make), etc.
