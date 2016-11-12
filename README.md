@@ -8,9 +8,9 @@ Email : nidbid@gmail.com
 DAPRAN, DAta PRocessing &amp; ANalytics is my attempts at delivering a package which can enable scientists and engineers to do 
 data analysis from the linux command line with basic pipelines. The idea is to reduce the dependence on actual software for 
 such calculations while enabling the user to work in the comfort of the shell command line interface itself. The target users
-engineers and scientists working in the field of Digital Signal Processing, Dynamical Systems, etc.
+engineers and scientists working in the field of Digital Signal Processing, Dynamical Systems, etc. The TISEAN project (http://www.mpipks-dresden.mpg.de/~tisean/) served as my inspiration for starting this.
 
-I have started off with an FFT/IFFT program using FFTW3 as of now. I will be moving into STFT, filters, and other Signal processing features in the coming days.
+I have started off with an FFT/IFFT and an STFT program using FFTW3 as of now. I will be moving into filters, and other Signal processing features in the future.
 I will be adding binaries as and when I write them.
 
 Binaries:
