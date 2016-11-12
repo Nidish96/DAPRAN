@@ -14,11 +14,11 @@ const struct option opl[] = {
   {NULL, 0, NULL, 0}
 };
 const char* const opd[] = {
-  " - \n\tPrint Help Message\n",
-  "str\n\tSequence 1 <filename> [stdin]\n",
-  "str\n\tSequence 2 <filename> [stdin]\n",
-  "int\n\tLength of data [16]\n",
-  "str\n\tFile to output to [stdout]\n"
+  " - \t Print Help Message",
+  "str\t Sequence 1 <filename> [stdin]",
+  "str\t Sequence 2 <filename> [stdin]",
+  "int\t Length of data [16]",
+  "str\t File to output to [stdout]"
 };
 const int opn = 5;
 void PrintUsage()
@@ -26,7 +26,7 @@ void PrintUsage()
   fprintf(stderr,"Usage : %s [ options ... ]\n",progname);
   int i;
   for( i=0;i<opn;i++ )
-    fprintf(stderr,"-%c --%s %s\n",opl[i].val,opl[i].name,opd[i]);
+    fprintf(stderr,"-%c --%s\t %s\n",opl[i].val,opl[i].name,opd[i]);
 }
 
 int main(int nargs,char* sargs[])

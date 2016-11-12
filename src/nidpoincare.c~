@@ -1,0 +1,6 @@
+#include<stdio.h>
+#include<stdlib.h>
+#include<ColumnRead.h>
+#include<getopt.h>
+
+char* progname;

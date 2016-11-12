@@ -17,13 +17,13 @@ const struct option op_long[] = {
   {NULL, 0, NULL, 0}
 };
 const char* const op_desc[] = {
-  "---\n\tPrint this help message\n",
-  "dbl_dbl_dbl_dbl,dbl_dbl_dbl_dbl,...\n\tSpecify wave by <amp_freq(Hz)_phase(deg)_power>. Power denotes the power to which the particular\n\twave has to be raised\n",
-  "dbl\n\tSpecify Sampling Frequency (in Hz)\n",
-  "dbl\n\tSpecify how long to generate the wave (in seconds)\n",
-  "int\n\tSpecify how data points to generate (resets the sampling frequency accordingly)\n",
-  " - \n\tSet option to skip time column in output\n",
-  "str\n\tSpecify output file (stdout by default)\n",  
+  " - \n\tPrint this help message",
+  "dbl_dbl_dbl_dbl,dbl_dbl_dbl_dbl,...\n\tSpecify wave by <amp_freq(Hz)_phase(deg)_power>.\n\tPower denotes the power to raise the particular wave",
+  "dbl\n\tSpecify Sampling Frequency (in Hz)",
+  "dbl\n\tSpecify how long to generate the wave (in seconds)",
+  "int\n\tSpecify how data points to generate\n\t(resets the sampling frequency accordingly)",
+  " - \n\tSet option to skip time column in output",
+  "str\n\tSpecify output file (stdout by default)",  
 };
 const int op_num =  7;
 void PrintUsage()
