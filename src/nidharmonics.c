@@ -5,6 +5,9 @@
 #include<string.h>
 #include<assert.h>
 #include<math.h>
+#include<complex.h>
+#include<fftw3.h>
+#include<gsl/gsl_vector.h>
 
 char* progname;
 const struct option lops[] = {
@@ -15,13 +18,11 @@ const struct option lops[] = {
   { "delim", 1, NULL, 'd' },
   { "dimensions", 1, NULL, 'M' },
   { "columns", 1, NULL, 'c' },
-  { "plane", 1, NULL, 'n' },
-  { "offset", 1, NULL, 'e' },
-  { "direction", 1, NULL, 'x' },
+  { "time", 1, NULL, 't' },
   { "outfile", 1, NULL, 'o' },
   { NULL, 0, NULL, 0}
 };
-int nops = 11;
+int nops = 9;
 const char* const dops[] = {
   "  -  \t Print this help message",
   " str \t Specify input file (stdin by default)",
@@ -30,15 +31,12 @@ const char* const dops[] = {
   " str \t Set field delimiter <tab,spc>[defaults to spc] - other delimiters may be typed as is",
   " int \t Dimensions of data",
   " i,..\t Specify columns to read from file",
-  " d,..\t Define plane of cut (0's appended)",
-  " dbl \t Define offset of plane",
-  " 1,-1\t Specify direction of cut",
+  "  -  \t Enable if first column is time (M includes this) - time scaled to 2pi if not specified",
   " str \t Specify output file (stdout by default)"
 };
-const char* const sops = "hd:M:n:e:c:i:o:x:N:g:";
+const char* const sops = "hd:M:c:i:o:N:g:t";
 
 void usage();
-double planeoffset(double* data,double* n,double e,int M);
 
 int main( int nargs,char* sargs[] )
 {
@@ -46,14 +44,11 @@ int main( int nargs,char* sargs[] )
   int opn;
   char *delim = NULL,*saveptr,*tmp;
   int M = 2,i,k;
-  double* n = (double*)calloc(M,sizeof(double));
   int* c = (int*)malloc(M*sizeof(int));
   c[0] = 0; c[1] = 1;
-  n[0] = 1; n[1] = 0;
-  double e = 0;
-  int dxn = 1;
   FILE *FIN = stdin,*FOUT = stdout;
   int N = -1,g = 0;
+  int t_flag = 0;
 
   do{
     opn = getopt_long(nargs,sargs,sops,lops,NULL);
@@ -61,18 +56,7 @@ int main( int nargs,char* sargs[] )
     switch(opn){
     case 'h': usage(); exit(1);
     case 'd': delim = (strcmp(optarg,"tab")==0)?"\t":(strcmp(optarg,"spc")==0)?" ":optarg; break;
-    case 'M': M = atoi(optarg);
-      assert(M>1); break;
-    case 'n': n = (double*)realloc(n,M*sizeof(double));
-      tmp = strtok_r(optarg, ",", &saveptr);
-      if( tmp==NULL ) n[0] = 0;
-      else n[0] = atof(tmp);
-      for( i=1;i<M;i++ ){
-	tmp = strtok_r(NULL,",",&saveptr);
-	if( tmp==NULL ) n[i] = 0;
-	else n[i] = atof(tmp);
-      }
-      break;
+    case 'M': M = atoi(optarg); break;
     case 'c': c = (int*)malloc(M*sizeof(int));
       tmp = strtok_r(optarg, ",", &saveptr);
       if( tmp==NULL ) c[0] = 0;
@@ -83,12 +67,11 @@ int main( int nargs,char* sargs[] )
 	else c[i] = atoi(tmp);
       }
       break;
-    case 'e': e = atof(optarg); break;
     case 'i': FIN = fopen(optarg,"r"); break;
     case 'o': FOUT = fopen(optarg,"w+"); break;
-    case 'x': dxn = atoi(optarg); break;
     case 'N': N = atoi(optarg); break;
     case 'g': g = atoi(optarg); break;
+    case 't': t_flag = 1; assert(M>1); break;
     }
   }while(opn!=-1);
   if( delim==NULL ){
@@ -99,25 +82,41 @@ int main( int nargs,char* sargs[] )
   double** data = ColumnReadn(FIN,delim,&N,g,M,c,NULL);
   if( N==0 )
     exit(1);
-  double pofst,ofst;
-  double wp,w;
+  double** trdata = transpose(data,N,M);
+  freedata(data,N,M);
 
-  ofst = planeoffset(data[0],n,e,M);
-  for( i=1;i<N;i++ ){
-    pofst = ofst;
-    ofst = planeoffset(data[i],n,e,M);
-    if( ofst*pofst<=0 && ((ofst-pofst)*dxn==fabs(ofst-pofst) ||
-			  dxn==0 ) ){ 
-      wp = fabs(ofst)/(fabs(ofst)+fabs(pofst));
-      w = fabs(pofst)/(fabs(ofst)+fabs(pofst));
+  assert(N>3);
+  double w_fnd = (t_flag!=0)?2.*M_PI/(trdata[0][N-1]+trdata[0][N-2]-trdata[0][N-3]):1.0;
 
-      for( k=0;k<M;k++ )
-  	fprintf(stdout,"%lf ",
-  		data[i-1][k]*wp+data[i][k]*w);
-      fprintf(stdout,"\n");
+  int H = N/2+1;
+  int Nh = H;
+  fftw_plan P;
+  fftw_complex *out,*in;
+  out = (fftw_complex*)fftw_malloc(sizeof(fftw_complex)*H);
+  
+  gsl_vector* X = gsl_vector_alloc((M-t_flag)*(2*Nh+1));
+  gsl_vector_view Xv;
+
+  int j;
+
+  for( i=0;i<M-t_flag;i++ ){
+    P = fftw_plan_dft_r2c_1d(N, trdata[i+t_flag], out, FFTW_ESTIMATE);
+    fftw_execute(P);
+    fftw_destroy_plan(P);
+
+    Xv = gsl_vector_subvector_with_stride(X, i, M-t_flag, 2*Nh+1);
+    gsl_vector_set( &Xv.vector,0, creal(out[0])/2. );
+
+    for( j=1;j<=Nh;j++ ){
+      gsl_vector_set(&Xv.vector, 2*j-1, creal(out[j]) );
+      gsl_vector_set(&Xv.vector, 2*j, -cimag(out[j]) );
     }
   }
-  
+  gsl_vector_scale(X, 2.0/N);
+  gsl_vector_fprintf(stdout, X, "%lf");
+  fprintf(stdout,"%lf\n",w_fnd);
+
+  fftw_free(out);
   return 0;
 }
 
@@ -129,13 +128,4 @@ void usage()
   for( i=0;i<nops;i++ )
     fprintf(stderr,"-%c --%s\t %s\n",
 	    lops[i].val,lops[i].name,dops[i]);
-}
-
-double planeoffset(double* data,double* n,double e,int M)
-{
-  int i;
-  double ret = 0;
-  for( i=0;i<M;i++ )
-    ret += n[i]*data[i];
-  return ret-e;
 }

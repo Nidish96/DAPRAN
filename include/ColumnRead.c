@@ -268,3 +268,34 @@ double** ColumnReadn(FILE* F,char* delim,int* n,int g,int cn,int *c,double* freq
 
   return dat;
 }
+
+double** transpose(double** data,int R,int C)
+/*
+  data : R X C matrix of data
+  R : number of rows in data
+  C : number of columns in data
+*/
+{
+  int i,j;
+  double** trdata = (double**)malloc(C*sizeof(double*));
+  for( j=0;j<C;j++ )
+    trdata[j] = (double*)malloc(R*sizeof(double));
+
+  for( i=0;i<R;i++ )
+    for( j=0;j<C;j++ )
+      trdata[j][i] = data[i][j];
+  return trdata;
+}
+
+void freedata(double** data,int R,int C)
+/*
+  data : R X C matrix of data
+  R : number of rows in data
+  C : number of columns in data
+*/
+{
+  int i;
+  for( i=0;i<R;i++ )
+    free(data[i]);
+  free(data);
+}

@@ -67,7 +67,7 @@ int main(int argn,char* args[])
 	W = (WAVE*)realloc(W,nw*sizeof(WAVE));
 	sscanf(buff,"%lf_%lf_%lf_%lf",&W[nw-1].A,&W[nw-1].w,&W[nw-1].P,&W[nw-1].pwr);
 	W[nw-1].pwr = (!W[nw-1].pwr)?1:W[nw-1].pwr;
-	W[nw-1].w *= 2*M_PI;
+	W[nw-1].w *= 2.*M_PI;
 	W[nw-1].P *= d2r;
       }while(buff=strtok(NULL,","));
       break;
@@ -86,10 +86,12 @@ int main(int argn,char* args[])
   int i;
   for( t=0;t<=Tmax;t+=step){
     y = 0;
-    for( i=0;i<nw;i++ )
-      y += pow(W[i].A*cos(W[i].w*t+W[i].P),W[i].pwr);
     if( tflag ) fprintf(FOUT,"%lf ",t);
-    fprintf(FOUT,"%lf\n",y);
+    for( i=0;i<nw;i++ ){
+      y = pow(W[i].A*cos(W[i].w*t+W[i].P),W[i].pwr);
+      fprintf(FOUT,"%lf ",y);
+    }
+    fprintf(FOUT,"\n");
   }
 
   free(W);
