@@ -19,10 +19,11 @@ const struct option lops[] = {
   { "dimensions", 1, NULL, 'M' },
   { "columns", 1, NULL, 'c' },
   { "time", 1, NULL, 't' },
+  { "Harmonics", 1, NULL, 'H' },
   { "outfile", 1, NULL, 'o' },
   { NULL, 0, NULL, 0}
 };
-int nops = 9;
+int nops = 10;
 const char* const dops[] = {
   "  -  \t Print this help message",
   " str \t Specify input file (stdin by default)",
@@ -32,9 +33,10 @@ const char* const dops[] = {
   " int \t Dimensions of data",
   " i,..\t Specify columns to read from file",
   "  -  \t Enable if first column is time (M includes this) - time scaled to 2pi if not specified",
+  " int \t Number of harmonics to output",
   " str \t Specify output file (stdout by default)"
 };
-const char* const sops = "hd:M:c:i:o:N:g:t";
+const char* const sops = "hd:M:c:i:o:N:g:tH:";
 
 void usage();
 
@@ -49,6 +51,7 @@ int main( int nargs,char* sargs[] )
   FILE *FIN = stdin,*FOUT = stdout;
   int N = -1,g = 0;
   int t_flag = 0;
+  int Nh = -1;
 
   do{
     opn = getopt_long(nargs,sargs,sops,lops,NULL);
@@ -72,6 +75,7 @@ int main( int nargs,char* sargs[] )
     case 'N': N = atoi(optarg); break;
     case 'g': g = atoi(optarg); break;
     case 't': t_flag = 1; assert(M>1); break;
+    case 'H': Nh = atoi(optarg); break;
     }
   }while(opn!=-1);
   if( delim==NULL ){
@@ -89,7 +93,7 @@ int main( int nargs,char* sargs[] )
   double w_fnd = (t_flag!=0)?2.*M_PI/(trdata[0][N-1]+trdata[0][N-2]-trdata[0][N-3]):1.0;
 
   int H = N/2+1;
-  int Nh = H;
+  Nh = (Nh==-1)?H:Nh;
   fftw_plan P;
   fftw_complex *out,*in;
   out = (fftw_complex*)fftw_malloc(sizeof(fftw_complex)*H);

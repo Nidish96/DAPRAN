@@ -106,7 +106,7 @@ int main( int nargs,char* sargs[] )
   for( i=1;i<N;i++ ){
     pofst = ofst;
     ofst = planeoffset(data[i],n,e,M);
-    if( ofst*pofst<=0 && ((ofst-pofst)*dxn==fabs(ofst-pofst) ||
+    if( ofst*pofst<0 && ((ofst-pofst)*dxn==fabs(ofst-pofst) ||
 			  dxn==0 ) ){ 
       wp = fabs(ofst)/(fabs(ofst)+fabs(pofst));
       w = fabs(pofst)/(fabs(ofst)+fabs(pofst));

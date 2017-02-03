@@ -60,8 +60,7 @@ int main(int argn,char* args[])
 
     switch(op_choice){
     case 'h': PrintUsage(); break;
-    case 'W': nw=0;
-      buff = strtok(optarg,",");
+    case 'W': nw=0; buff = strtok(optarg,",");
       do{
 	nw++;
 	W = (WAVE*)realloc(W,nw*sizeof(WAVE));
