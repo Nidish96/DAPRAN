@@ -3,6 +3,7 @@
 #include<string.h>
 #include<stdlib.h>
 #include<ctype.h>
+#include<assert.h>
 
 double* ColumnRead(FILE* F,char* delim,int* n,int g,int c,double* freq)
 /* 
@@ -25,7 +26,7 @@ double* ColumnRead(FILE* F,char* delim,int* n,int g,int c,double* freq)
   dat = malloc(sizeof(double));
   double time=0,ptime=0,pptime=0;
   for( i=1;i<g;i++ )
-    getline(&line,&len,F);
+    assert(getline(&line,&len,F));
   /*  if( *freq<0 ){
     for( i=0;i<2;i++){
       ptime = time;
@@ -117,7 +118,7 @@ double** ColumnRead2(FILE* F,char* delim,int* n,int g,int c1,int c2,double* freq
   double time=0,ptime=0,pptime=0;
   int flag;
   for( i=1;i<g;i++ )
-    getline(&line,&len,F);
+    assert(getline(&line,&len,F));
   
   if( N!=-1 ){
     for( i=0;i<N;i++ )
@@ -186,51 +187,52 @@ double** ColumnReadn(FILE* F,char* delim,int* n,int g,int cn,int *c,double* freq
   n : pointer to number of lines (-1 if full file)
   g : number of lines to ignore
   cn : number of columns
-  c : pointer to column indexes
+  c : pointer to column indices
   freq : pointer to sampling frequency; if negative, abs(*freq) is the time column
 */
 {
   int i,j,N=*n,tcol,k;
-  tcol = (*freq<0)?-*freq-1:0;
+  tcol = (freq==NULL)?0:(*freq<0)?-*freq-1:0;
   rewind(F);
 
-  char *line = NULL;
+  char *line = NULL,*saveptr,*tmp=(char*)malloc(100*sizeof(char));
   size_t len = 0;
   char *buff = NULL;
-  double** dat;
-  dat = malloc(cn*sizeof(double));
+  int dsiz = 0;
+  double** dat = (double**)malloc(sizeof(double*));
+  dat[0] = (double*)malloc(cn*sizeof(double));
   for( k=0;k<cn;k++ ){
-    c[k]=(c[k]<1)?1:c[k];
-    dat[k] = malloc(sizeof(double));
+    c[k] = abs(c[k]);
   }
 
   double time=0,ptime=0,pptime=0;
   int flag;
   for( i=1;i<g;i++ )
-    getline(&line,&len,F);
+    assert(getline(&line,&len,F));
   
   if( N!=-1 ){
-    for( i=0;i<N;i++ )
-    {
-      pptime=ptime;
-      ptime = time;
+    for( i=0;i<N;i++ ){
+      pptime = ptime;
+      ptime  = time;
       if(getline(&line,&len,F)==EOF)
-      {N=i;	break;}
+  	{N=i;	break;}
       if( line[0]=='#' ) continue;
-
-      for( k=0;k<cn;k++ )
-	dat[k] = realloc(dat[k],(i+1)*sizeof(double));
-
-      for( k=0;k<cn;k++ ){    
-	buff = strtok(line,delim);
-	if( tcol==0 )
-	  time=atof(buff);
-	for( j=1;j<c[k];j++ ){
-	  buff = strtok(NULL,delim);
-	  if( j==tcol )
-	    time=atof(buff);
-	  if(buff==NULL) break;}
-	dat[k][i] = (buff!=NULL)?atof(buff):0;
+      
+      dsiz++;
+      dat = (double**)realloc(dat,dsiz*sizeof(double*));
+      dat[dsiz-1] = (double*)malloc(cn*sizeof(double));
+      
+      for( k=0;k<cn;k++ ){
+	strcpy(tmp,line);
+  	buff = strtok(tmp,delim);
+  	if( tcol==0 )
+  	  time=atof(buff);
+  	for( j=1;j<c[k];j++ ){
+  	  buff = strtok(NULL,delim);
+  	  if( j==tcol )
+  	    time=atof(buff);
+  	  if(buff==NULL) break;}
+  	dat[dsiz-1][k] = (buff!=NULL)?atof(buff):0;
       }
     }
   }
@@ -238,31 +240,62 @@ double** ColumnReadn(FILE* F,char* delim,int* n,int g,int cn,int *c,double* freq
     N=0;
     while(getline(&line,&len,F)!=EOF){
       if( line[0]=='#' ) continue;
+	
       pptime = ptime;
       ptime = time;
       N+=1;
-      for( k=0;k<cn;k++ )
-	dat[k] = realloc(dat[k],N*sizeof(double));
-
-      flag=0;
-      i=-1;
-      buff=strtok(line,delim);
-
-      for( k=0;k<cn;k++ ){    
-	buff = strtok(line,delim);
-	if( tcol==0 )
-	  time=atof(buff);
-	for( j=1;j<c[k];j++ ){
-	  buff = strtok(NULL,delim);
-	  if( j==tcol )
-	    time=atof(buff);
-	  if(buff==NULL) break;}
-	dat[k][i] = (buff!=NULL)?atof(buff):0;
-      }      
+      dsiz++;
+      dat = (double**)realloc(dat,dsiz*sizeof(double*));
+      dat[dsiz-1] = (double*)malloc(cn*sizeof(double));
+      
+      for( k=0;k<cn;k++ ){
+      	strcpy(tmp, line);
+      	buff = strtok_r(tmp,delim,&saveptr);
+      	if( tcol==0 )
+      	  time=atof(buff);
+      	for( j=1;j<c[k];j++ ){
+      	  buff = strtok_r(NULL,delim,&saveptr);
+      	  if( j==tcol )
+      	    time=atof(buff);
+      	  if(buff==NULL) break;}
+      	dat[dsiz-1][k] = (buff!=NULL)?atof(buff):0;
+      }
     }
   }
-  *freq = (*freq<0)?(time==ptime)?1.0:1.0/(ptime-pptime):*freq;
+  if( freq!=NULL )
+    *freq = (*freq<0)?(time==ptime)?1.0:1.0/(ptime-pptime):*freq;
   *n = N-g;
 
   return dat;
+}
+
+double** transpose(double** data,int R,int C)
+/*
+  data : R X C matrix of data
+  R : number of rows in data
+  C : number of columns in data
+*/
+{
+  int i,j;
+  double** trdata = (double**)malloc(C*sizeof(double*));
+  for( j=0;j<C;j++ )
+    trdata[j] = (double*)malloc(R*sizeof(double));
+
+  for( i=0;i<R;i++ )
+    for( j=0;j<C;j++ )
+      trdata[j][i] = data[i][j];
+  return trdata;
+}
+
+void freedata(double** data,int R,int C)
+/*
+  data : R X C matrix of data
+  R : number of rows in data
+  C : number of columns in data
+*/
+{
+  int i;
+  for( i=0;i<R;i++ )
+    free(data[i]);
+  free(data);
 }

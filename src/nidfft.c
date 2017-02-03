@@ -8,59 +8,51 @@
 #include<ColumnRead.h>
 
 char* progname;
-
 const struct option long_options[] = {
-  { "Help", 0, NULL, 'h'},
-  { "Reverse",0,NULL, 'r'},
-  { "Samp-Freq",1,NULL,'f'},
-  { "Freq-Col",1,NULL,'F'},
-  { "Length",1,NULL,'l'},
-  { "Ignore",1,NULL,'g'},
-  { "Column",1,NULL,'c'},
+  { "help", 0, NULL, 'h'},
+  { "reverse",0,NULL, 'r'},
+  { "sampfreq",1,NULL,'f'},
+  { "freqcol",1,NULL,'F'},
+  { "length",1,NULL,'l'},
+  { "ignore",1,NULL,'g'},
+  { "column",1,NULL,'c'},
   { "delim",1,NULL,'d'},
-  { "Time-Col",1,NULL,'t'},
-  { "Infile",1,NULL,'i'},
-  { "Outfile",1,NULL,'o'},
-  { "Complex",1,NULL,'I'},
-  { "OP_W",0,NULL,'w' }
+  { "timecol",1,NULL,'t'},
+  { "infile",1,NULL,'i'},
+  { "outfile",1,NULL,'o'},
+  { "complex",1,NULL,'I'},
+  { "OP_W",0,NULL,'w' },
+  { NULL, 0, NULL, 0}
 };
-
+int nopns = 13;
+const char* const dopns[] = {
+  " -  \t Display this help message",
+  "i,i \t Enable for Reverse Transform - Needs output with <real,imag> columns <i1,i2>",
+  "dbl \t Sampling Frequency [1 Hz]",
+  "int \t Frequency Column (only for -r mode)",
+  "int \t Length to be taken [full file default]",
+  "int \t Number of Lines to be ignored[0]",
+  "int \t Column to be taken [1]",
+  "str \t Set Delimiter <tab,spc>[defaults to spc] Other delimiters may just be typed",
+  "int \t Column to be taken as time data",
+  "str \t Input File Name [stdin]",
+  "str \t Output File Name [stdout]",
+  " -  \t Enable Complex output",
+  " -  \t Output W(omega) instead of f(frequency) (only for fwd trnsfrm)"
+};
 void PrintUsage()
 {
   fprintf(stderr,"Usage : %s options [ filename ... ]\n",progname);
-  fprintf(stderr,"-%c --%s\t  -  \t Display this help message\n"
-	  "-%c --%s\t i,i  \t Enable for Reverse Transform - Needs output with <real,imag> columns <i1,i2>\n"
-	  "-%c --%s\t dbl \t Sampling Frequency [1 Hz]\n"
-	  "-%c --%s\t int \t Frequency Column (only for -r mode)\n"
-	  "-%c --%s\t int \t Length to be taken [full file default]\n"
-	  "-%c --%s\t int \t Number of Lines to be ignored[0]\n"
-	  "-%c --%s\t int \t Column to be taken [1]\n"
-	  "-%c --%s\t str \t Set Delimiter <tab,spc>[defaults to spc] Other delimiters may just be typed\n"
-	  "-%c --%s\t int \t Column to be taken as time data\n"
-	  "-%c --%s\t str \t Input File Name [stdin]\n"
-	  "-%c --%s\t str \t Output File Name [stdout]\n"
-	  "-%c --%s\t  -  \t Enable Complex output\n"
-	  "-%c --%s\t  -  \t Output W(omega) instead of f(frequency) (only for fwd trnsfrm)\n"	  
-	  ,long_options[0].val,long_options[0].name
-	  ,long_options[1].val,long_options[1].name
-	  ,long_options[2].val,long_options[2].name
-	  ,long_options[3].val,long_options[3].name
-	  ,long_options[4].val,long_options[4].name
-	  ,long_options[5].val,long_options[5].name
-	  ,long_options[6].val,long_options[6].name
-	  ,long_options[7].val,long_options[7].name
-	  ,long_options[8].val,long_options[8].name
-	  ,long_options[9].val,long_options[9].name
-	  ,long_options[10].val,long_options[10].name
-	  ,long_options[11].val,long_options[11].name
-	  ,long_options[12].val,long_options[12].name	  
-	  );
+  int i;
+  for( i=0;i<nopns;i++ )
+    fprintf(stderr,"-%c --%s\t %s\n",
+	    long_options[i].val,long_options[i].name,dopns[i]);
 
   fprintf(stderr,"\nOutput :\n"
 	  "FORWARD TRANSFORM\n"
 	  "default: <frequency,spectral power>\n"
 	  "-I     : <frequency,real(tfm),imag(tfm)>\n"
-	  "REVERSE TRANSFORM (-r)\n"
+	  "INVERSE TRANSFORM (-r)\n"
 	  "default: <time,value>\n");
 
   exit(1);
@@ -120,15 +112,15 @@ int main(int argc,char* argv[])
 
     fftw_execute(P);
 
+    scale = freq/L;
     L = L/2+1;
-    scale = freq/(2*(L-1));
     scale = (w)?scale*2*M_PI:scale;
     if( cmp==0 ){
       for(i=0;i<L;i++)
-	fprintf(FOUT,"%lf %.4e\n",i*scale,pow(cabs(out[i]),2)/L);}
+	fprintf(FOUT,"%lf %.4e\n",i*scale,pow(cabs(out[i]),2)/(L-1));}
      else{
       for(i=0;i<L;i++)
-	fprintf(FOUT,"%lf %.4e %.4e\n",i*scale,creal(out[i])/L,cimag(out[i])/L);}
+	fprintf(FOUT,"%lf %.4e %.4e\n",i*scale,creal(out[i])/(L-1),cimag(out[i])/(L-1));}
 
     fftw_destroy_plan(P);
     free(data);

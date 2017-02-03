@@ -33,7 +33,7 @@ const struct option long_options[]={
   { "OP_Omega", 0, NULL, 'w' },
   { NULL, 0, NULL, 0}
 };
-const char* description[]={
+const char* const description[]={
   " -  Display this Help Message",
   " -  Window - Rectangle",
   " -  Window - Triangle",
@@ -53,8 +53,8 @@ const char* description[]={
   "int Number of lines to ignore [defaults to 0]",
   "str Set delimiter <tab,spc>[defaults to spc]; Other string delimiters may be typed",
   "int Set increment for STFT [defaults to 24]",
-  " -  Enable Complex Output <real,imag> [defaults to power]\n"
-  " -  Output in terms of W(Omega, rad s^-1) instead of f(Frequency, Hz)\n"
+  " -  Enable Complex Output <real,imag> [defaults to power]",
+  " -  Output in terms of W(Omega, rad s^-1) instead of f(Frequency, Hz)"
 };
 int args_tot=21;
 void PrintUsage(FILE* Stream)
